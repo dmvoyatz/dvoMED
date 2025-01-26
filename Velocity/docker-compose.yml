@@ -1,0 +1,52 @@
+version: '1.0'
+name: e-utopia
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql8
+    restart: always
+    environment:
+      MYSQL_DATABASE: utopiaDB
+      MYSQL_ROOT_PASSWORD: xeF5@r6os
+      MYSQL_USER: xefternos
+      MYSQL_PASSWORD: xeF5@r6os
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql 
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+
+  springboot-app:
+    build:
+      context: ./dvomed
+      dockerfile: Dockerfile
+    container_name: springboot-app
+    ports:
+      - "8087:8087" # Expose port 8087 on host to container
+    environment:
+      SPRING_APPLICATION_NAME: dvomed
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/utopiaDB
+      SPRING_DATASOURCE_USERNAME: xefternos
+      SPRING_DATASOURCE_PASSWORD: xeF5@r6os
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+      JWT_SECRET_KEY: 0c6fc4000e930d95328015840f440af0ab0d2e6a4fbdbf6c605e55d9cf1855fd4b04a8cce93846b3ac363b38d127c81bdc6038fa38a178fcdb9ceb81bff31c592265290bed585068b21d2e0cd16546a99e02f56cfb9a305d1d9dc709ccd69065513b6c328c4fbab848426b96f1ed2682148d99a2525267b34ab23c0ae4c462e556ada667ad06bc4ceec18cfe7a70871cd3cf99ecdc7426cc62169ca0bcf820a743bd2d4418d08e066a9875bb42c58bce18c51c1c06274ac41994b8ce5b05fc8c4521913b482decc37633e6520d4edef66b4bd36c8eba5ca20631ba6e4269d5cf898319e2e5f5fa057625bd786186569d4879fbf5f57091b2c52d39104fe9459b
+    depends_on:
+      - mysql
+    entrypoint: /bin/sh -c "sleep 30 && java -jar /app/dvomed-0.0.1-SNAPSHOT.jar"
+
+volumes:
+  mysql_data:
